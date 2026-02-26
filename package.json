@@ -1,0 +1,75 @@
+{
+  "name": "vue-markdown-stream",
+  "version": "1.0.0",
+  "private": false,
+  "description": "Stream markdown content with Vue 3 component blocks — powered by markdown-it-container",
+  "keywords": [
+    "vue3",
+    "markdown",
+    "streaming",
+    "markdown-it",
+    "markdown-it-container",
+    "vue-component",
+    "typewriter",
+    "ai-streaming"
+  ],
+  "license": "MIT",
+  "author": "hanlang123",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hanlang123/vue-markdown-stream.git"
+  },
+  "homepage": "https://hanlang123.github.io/vue-markdown-stream/",
+  "bugs": {
+    "url": "https://github.com/hanlang123/vue-markdown-stream/issues"
+  },
+  "type": "module",
+  "main": "./dist/vue-markdown-stream.cjs.js",
+  "module": "./dist/vue-markdown-stream.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/vue-markdown-stream.es.js",
+      "require": "./dist/vue-markdown-stream.cjs.js"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "build:lib": "vue-tsc -b && cross-env BUILD_MODE=lib vite build",
+    "preview": "vite preview",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "peerDependencies": {
+    "markdown-it": ">=14.0.0",
+    "markdown-it-container": ">=4.0.0",
+    "vue": ">=3.3.0"
+  },
+  "dependencies": {
+    "markdown-it": "^14.1.1",
+    "markdown-it-container": "^4.0.0",
+    "vue": "^3.5.25"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
+    "@types/markdown-it-container": "^4.0.0",
+    "@types/node": "^24.10.1",
+    "@vitejs/plugin-vue": "^6.0.2",
+    "@vue/tsconfig": "^0.8.1",
+    "cross-env": "^10.1.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.1",
+    "vite-plugin-dts": "^4.5.4",
+    "vitepress": "^1.6.4",
+    "vue-tsc": "^3.1.5"
+  }
+}
