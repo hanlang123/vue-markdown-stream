@@ -5,7 +5,7 @@
 内置的 `useStreamingText` 提供了一个演示用的 mock 流式输出：
 
 ```typescript
-import { useStreamingText } from 'vue-markdown-stream'
+import { useStreamingText } from '@krishanjinbo/vue-markdown-stream'
 
 const { text, isStreaming, startStream, stopStream, resetStream } = useStreamingText()
 ```
@@ -81,7 +81,7 @@ function streamFromSSE(prompt: string) {
 这确保 `markdown-it` 每次都能收到合法输入，避免容器块内容被跳过或错误渲染。
 
 ```typescript
-import { autoCloseContainers } from 'vue-markdown-stream'
+import { autoCloseContainers } from '@krishanjinbo/vue-markdown-stream'
 
 // 内部自动调用，你也可以手动使用
 const safeMarkdown = autoCloseContainers(streamChunk)

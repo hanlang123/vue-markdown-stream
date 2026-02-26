@@ -5,7 +5,7 @@
 自动补全流式 Markdown 中未闭合的 `:::` 容器块。
 
 ```typescript
-import { autoCloseContainers } from 'vue-markdown-stream'
+import { autoCloseContainers } from '@krishanjinbo/vue-markdown-stream'
 
 const safeMarkdown = autoCloseContainers(streamChunk)
 ```
@@ -38,7 +38,7 @@ const safeMarkdown = autoCloseContainers(streamChunk)
 将包含 `<vue-block>` 占位元素的 HTML 字符串转换为 VNode 数组。
 
 ```typescript
-import { htmlToVnodes, type ComponentMap } from 'vue-markdown-stream'
+import { htmlToVnodes, type ComponentMap } from '@krishanjinbo/vue-markdown-stream'
 import { h } from 'vue'
 
 const componentMap: ComponentMap = {

@@ -1,5 +1,5 @@
 {
-  "name": "vue-markdown-stream",
+  "name": "@krishanjinbo/vue-markdown-stream",
   "version": "1.0.0",
   "private": false,
   "description": "Stream markdown content with Vue 3 component blocks — powered by markdown-it-container",
@@ -17,7 +17,7 @@
   "author": "hanlang123",
   "repository": {
     "type": "git",
-    "url": "https://github.com/hanlang123/vue-markdown-stream.git"
+    "url": "git+https://github.com/hanlang123/vue-markdown-stream.git"
   },
   "homepage": "https://hanlang123.github.io/vue-markdown-stream/",
   "bugs": {

@@ -6,7 +6,7 @@
 
 ```vue
 <script setup lang="ts">
-import { MarkdownRenderer } from 'vue-markdown-stream'
+import { MarkdownRenderer } from '@krishanjinbo/vue-markdown-stream'
 </script>
 
 <template>
@@ -43,7 +43,7 @@ content
 引入内置样式：
 
 ```typescript
-import 'vue-markdown-stream/style.css'
+import '@krishanjinbo/vue-markdown-stream/style.css'
 ```
 
 也可使用 Tailwind Typography 或其他 prose 样式替代，只需对 `.markdown-body` 应用即可。

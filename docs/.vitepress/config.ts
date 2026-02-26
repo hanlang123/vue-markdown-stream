@@ -21,7 +21,7 @@ export default defineConfig({
         text: 'v1.0.0',
         items: [
           { text: 'Changelog', link: 'https://github.com/hanlang123/vue-markdown-stream/releases' },
-          { text: 'npm', link: 'https://www.npmjs.com/package/vue-markdown-stream' },
+          { text: 'npm', link: 'https://www.npmjs.com/package/@krishanjinbo/vue-markdown-stream' },
         ],
       },
     ],

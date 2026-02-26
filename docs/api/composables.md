@@ -73,7 +73,7 @@ async function streamFromFetch(url: string, body: object) {
 底层 Markdown 渲染函数，内部调用了 `autoCloseContainers`。
 
 ```typescript
-import { renderMarkdown } from 'vue-markdown-stream'
+import { renderMarkdown } from '@krishanjinbo/vue-markdown-stream'
 
 const html: string = renderMarkdown('# Hello\n::: alert info\n内容\n:::')
 ```

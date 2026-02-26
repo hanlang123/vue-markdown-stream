@@ -3,7 +3,7 @@
 ## 安装
 
 ```bash
-npm install vue-markdown-stream
+npm install @krishanjinbo/vue-markdown-stream
 ```
 
 ::: tip 对等依赖
@@ -20,7 +20,7 @@ npm install markdown-it markdown-it-container
 
 ```vue
 <script setup lang="ts">
-import { MarkdownRenderer } from 'vue-markdown-stream'
+import { MarkdownRenderer } from '@krishanjinbo/vue-markdown-stream'
 
 const content = `
 # Hello vue-markdown-stream
@@ -49,7 +49,7 @@ const content = `
 
 ```typescript
 // main.ts 或组件中
-import 'vue-markdown-stream/style.css'
+import '@krishanjinbo/vue-markdown-stream/style.css'
 ```
 
 ## 流式用法
@@ -59,7 +59,7 @@ import 'vue-markdown-stream/style.css'
 ```vue
 <script setup lang="ts">
 import { computed } from 'vue'
-import { MarkdownRenderer, useStreamingText } from 'vue-markdown-stream'
+import { MarkdownRenderer, useStreamingText } from '@krishanjinbo/vue-markdown-stream'
 
 const { text, isStreaming, startStream, resetStream } = useStreamingText()
 

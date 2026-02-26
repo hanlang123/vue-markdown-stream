@@ -2,7 +2,7 @@
 
 > 流式 Markdown 渲染 + Vue 3 组件块，基于 `markdown-it-container`
 
-[![npm](https://img.shields.io/npm/v/vue-markdown-stream)](https://www.npmjs.com/package/vue-markdown-stream)
+[![npm](https://img.shields.io/npm/v/@krishanjinbo/vue-markdown-stream)](https://www.npmjs.com/package/@krishanjinbo/vue-markdown-stream)
 [![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 
 在 AI 流式输出场景中，将 `:::alert`、`:::card` 等 Markdown 容器块实时渲染为真实 Vue 3 组件，支持响应式 props 和 slot 内容。
@@ -19,7 +19,7 @@
 ## 安装
 
 ```bash
-npm install vue-markdown-stream markdown-it markdown-it-container
+npm install @krishanjinbo/vue-markdown-stream markdown-it markdown-it-container
 ```
 
 ## 快速上手
@@ -27,7 +27,7 @@ npm install vue-markdown-stream markdown-it markdown-it-container
 ```vue
 <script setup lang="ts">
 import { computed } from 'vue'
-import { MarkdownRenderer, useStreamingText } from 'vue-markdown-stream'
+import { MarkdownRenderer, useStreamingText } from '@krishanjinbo/vue-markdown-stream'
 
 const { text, isStreaming, startStream, resetStream } = useStreamingText()
 const display = computed(() => isStreaming.value ? text.value + '▍' : text.value)
