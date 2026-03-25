@@ -2,6 +2,21 @@
 
 ## 内置块
 
+v2 内置 8 个块组件：
+
+| 块语法 | 组件 | 说明 |
+|--------|------|------|
+| `:::alert` | AlertBlock | 告警提示（info/success/warning/error） |
+| `:::card` | DataCard | 数据卡片 |
+| `:::confirm` | ConfirmBlock | 确认操作 |
+| `:::select` | SelectBlock | 选择/消歧 |
+| `:::form` | FormBlock | 动态表单 |
+| `:::progress` | ProgressBlock | 进度展示 |
+| `:::datatable` | DataTableBlock | 数据表格 |
+| `:::actions` | ActionPills | 快捷操作气泡 |
+
+详细用法见 [Agent 交互组件](./agent-blocks)。
+
 ### `:::alert`
 
 ```markdown
@@ -9,123 +24,80 @@
 信息提示
 :::
 
-::: alert success
-成功提示
-:::
-
 ::: alert warning
 注意提示
 :::
-
-::: alert error
-错误提示
-:::
 ```
-
-**效果预览：** 带图标和颜色边框的提示卡片，`type` 控制颜色主题。
-
----
 
 ### `:::card`
 
 ```markdown
 ::: card 卡片标题
-
-支持 **Markdown** 内容、表格：
-
-| 列A | 列B |
-|-----|-----|
-| 值1 | 值2 |
-
+支持 **Markdown** 内容、表格等。
 :::
 ```
 
-## 注册自定义块
+## 通过 Props 注册自定义组件（v2 新增）
 
-以注册一个 `:::chart` 块为例，渲染为图表组件：
-
-### 第 1 步：创建组件
+v2 支持通过 `components` prop 传入自定义组件，无需修改源码：
 
 ```vue
-<!-- src/components/blocks/ChartBlock.vue -->
 <script setup lang="ts">
-defineProps<{
-  type?: 'bar' | 'line' | 'pie'
-  title?: string
-}>()
+import { MarkdownRenderer } from '@krishanjinbo/vue-markdown-stream'
+import MyChartBlock from './components/MyChartBlock.vue'
+
+const customComponents = {
+  ChartBlock: MyChartBlock,
+}
+
+const customSchemas = {
+  ChartBlock: {
+    allowed: {
+      type: { type: 'enum', enum: ['bar', 'line', 'pie'], default: 'bar' },
+      title: { type: 'string', maxLength: 50 },
+    },
+  },
+}
 </script>
 
 <template>
-  <div class="chart-block">
-    <div class="chart-title">{{ title }}</div>
-    <!-- 接收 slot 中的数据 -->
-    <slot />
-  </div>
+  <MarkdownRenderer
+    :content="text"
+    :components="customComponents"
+    :props-schemas="customSchemas"
+  />
 </template>
 ```
 
-### 第 2 步：注册 markdown-it-container
-
-在 `src/composables/useMarkdownParser.ts` 中追加：
-
-```typescript
-import ChartBlock from '../components/blocks/ChartBlock.vue'
-
-md.use(container, 'chart', {
-  validate(params: string) {
-    return /^chart/.test(params.trim())
-  },
-  render(tokens: any[], idx: number) {
-    const token = tokens[idx]
-    if (token.nesting === 1) {
-      const info = token.info.trim()
-      const typeMatch = info.match(/type=(\S+)/)
-      const titleMatch = info.match(/title="([^"]*)"/)
-      const type = typeMatch?.[1] || 'bar'
-      const title = titleMatch?.[1] || ''
-      return `<vue-block data-component="ChartBlock" data-type="${type}" data-title="${title}">\n`
-    }
-    return '</vue-block>\n'
-  },
-})
-```
-
-### 第 3 步：加入 componentMap
-
-在 `src/components/MarkdownRenderer.ts` 中：
-
-```typescript
-import ChartBlock from './blocks/ChartBlock.vue'
-
-const componentMap: ComponentMap = {
-  AlertBlock,
-  DataCard,
-  ChartBlock,  // ← 添加这一行
-}
-```
-
-### 使用
-
-```markdown
-::: chart type=bar title="月度数据"
-- 一月: 120
-- 二月: 95
-- 三月: 150
+::: tip
+自定义组件会与内置组件**合并**，同名时用户组件优先。
 :::
-```
 
 ## Props 传递规则
 
-`data-*` 属性会被自动提取为 props（去掉 `data-` 前缀）：
+`data-*` 属性会被自动提取并转换为 props：
 
-| Markdown 属性 | 组件 prop |
-|---------------|-----------|
-| `data-type="warning"` | `type="warning"` |
-| `data-title="标题"` | `title="标题"` |
-| `data-color="#ff6b35"` | `color="#ff6b35"` |
+| Markdown 属性 | 转换 | 组件 prop |
+|---------------|------|-----------|
+| `data-type="warning"` | kebab→camelCase | `type="warning"` |
+| `data-confirm-text="OK"` | kebab→camelCase | `confirmText="OK"` |
 
-所有 props 值均为**字符串类型**，组件内可用 `computed` 做类型转换。
+v2 新增 **PropValidator** 对 props 做类型转换：
+
+| Schema 类型 | 转换规则 |
+|-------------|---------|
+| `string` | 截断到 `maxLength` |
+| `number` | `Number()` + `min`/`max` clamp |
+| `boolean` | `'true'`/`'1'`/`'yes'` → `true` |
+| `enum` | 不在允许列表内 → `default` |
 
 ## Slot 内容
 
 `<vue-block>` 标签内的内容（已被 markdown-it 渲染为 HTML）会作为 `default slot` 传入组件。组件使用 `<slot />` 接收即可。
+
+## 安全机制
+
+Props 经过两层过滤：
+
+1. **全局黑名单** — `onclick`、`innerHTML`、`style`、`href`、`src` 等危险属性永远被过滤
+2. **组件白名单** — 每个组件只接受 schema 中声明的 props，未声明的被丢弃

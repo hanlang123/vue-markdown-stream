@@ -26,3 +26,8 @@ dist-ssr
 # VitePress
 docs/.vitepress/cache
 docs/.vitepress/dist
+
+# TypeScript build artifacts in src
+src/**/*.js
+src/**/*.d.ts
+src/**/*.js.map

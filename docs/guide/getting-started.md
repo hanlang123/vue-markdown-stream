@@ -14,9 +14,7 @@ npm install markdown-it markdown-it-container
 ```
 :::
 
-## 基础用法
-
-最简单的用法，直接传入 Markdown 字符串：
+## 基础用法（v1 兼容，零改动）
 
 ```vue
 <script setup lang="ts">
@@ -32,7 +30,7 @@ const content = `
 ::: card 数据卡片
 | 字段 | 值 |
 |------|-----|
-| 版本 | 1.0.0 |
+| 版本 | 2.0.0 |
 | 协议 | MIT |
 :::
 `
@@ -45,16 +43,11 @@ const content = `
 
 ## 使用内置样式
 
-引入配套的 prose 排版样式：
-
 ```typescript
-// main.ts 或组件中
 import '@krishanjinbo/vue-markdown-stream/style.css'
 ```
 
 ## 流式用法
-
-配合 `useStreamingText` composable 实现打字机效果：
 
 ```vue
 <script setup lang="ts">
@@ -63,7 +56,6 @@ import { MarkdownRenderer, useStreamingText } from '@krishanjinbo/vue-markdown-s
 
 const { text, isStreaming, startStream, resetStream } = useStreamingText()
 
-// 流式输出时追加打字机光标
 const display = computed(() =>
   isStreaming.value ? text.value + '▍' : text.value
 )
@@ -78,6 +70,31 @@ const display = computed(() =>
 </template>
 ```
 
+## Agent 交互用法（v2 新增）
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+import { MarkdownRenderer, useAgentEvents } from '@krishanjinbo/vue-markdown-stream'
+
+const content = ref('')
+const { createHandler, serializeToMessage } = useAgentEvents()
+
+const handleAction = createHandler(async (payload) => {
+  const message = serializeToMessage(payload)
+  console.log('发送给 Agent:', message)
+  // await sendToAgent(message)
+})
+</script>
+
+<template>
+  <MarkdownRenderer
+    :content="content"
+    @agent:action="handleAction"
+  />
+</template>
+```
+
 ## 在线演示
 
 <StreamDemo />
@@ -86,4 +103,6 @@ const display = computed(() =>
 
 - [流式输出详解](./streaming) — 对接真实 SSE/Stream API
 - [自定义块](./custom-blocks) — 注册自己的 Vue 组件块
+- [Agent 交互组件](./agent-blocks) — 内置交互组件用法
+- [事件系统](./events) — AgentEventBus 详解
 - [API 参考](../api/markdown-renderer) — 完整 API 文档

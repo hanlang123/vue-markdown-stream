@@ -23,59 +23,77 @@ const {
 - `stopStream()` 后再次调用 `startStream()` 会从暂停位置继续
 - `resetStream()` 会同时停止输出并清空 `text`
 
-### 打字机光标
+---
 
-在流式输出时追加光标字符 `▍`：
+## `useAgentEvents` <Badge type="tip" text="v2" />
 
-```typescript
-import { computed } from 'vue'
+Agent 事件管理 composable，用于处理和序列化组件交互事件。
 
-const display = computed(() =>
-  isStreaming.value ? text.value + '▍' : text.value
-)
-```
-
-### 对接真实 API
+### 返回值
 
 ```typescript
-import { ref } from 'vue'
-
-const text = ref('')
-const isStreaming = ref(false)
-
-async function streamFromFetch(url: string, body: object) {
-  isStreaming.value = true
-  text.value = ''
-
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-
-    const reader = res.body!.getReader()
-    const decoder = new TextDecoder()
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      text.value += decoder.decode(value, { stream: true })
-    }
-  } finally {
-    isStreaming.value = false
-  }
-}
+const {
+  lastAction,        // Ref<AgentActionPayload | null>  — 最近一次事件
+  actionHistory,     // Ref<AgentActionPayload[]>       — 事件历史
+  isProcessing,      // Ref<boolean>                    — 是否正在处理
+  createHandler,     // (handler) => eventHandler        — 创建事件处理函数
+  serializeToMessage, // (payload) => string            — 序列化为文本消息
+} = useAgentEvents()
 ```
+
+### `createHandler(handler)`
+
+包装自定义处理逻辑为可绑定到 `@agent:action` 的函数：
+
+```typescript
+const handleAction = createHandler(async (payload) => {
+  await sendToAgent(serializeToMessage(payload))
+})
+```
+
+### `serializeToMessage(payload)`
+
+将事件载荷序列化为可读文本，发送给 Agent：
+
+| 事件类型 | 序列化结果 |
+|---------|-----------|
+| `confirm` | `[用户操作] ConfirmBlock — 确认了操作: delete_user` |
+| `cancel` | `[用户操作] ConfirmBlock — 取消了操作: delete_user` |
+| `submit` | `[用户操作] FormBlock — 提交了表单: {"rating":"满意"}` |
+| `select` | `[用户操作] SelectBlock — 选择了: [0]` |
+| `pill_click` | `[用户操作] ActionPills — 点击了快捷操作: "生成报告"` |
+
+---
+
+## `useMarkdownParser` <Badge type="tip" text="v2" />
+
+创建 Markdown 解析器实例（增强版，已注册所有内置容器块）。
+
+```typescript
+const { parse, md } = useMarkdownParser()
+
+const html: string = parse('# Hello\n::: alert info\n内容\n:::')
+```
+
+### 返回值
+
+| 属性 | 类型 | 说明 |
+|------|------|------|
+| `parse` | `(content: string) => string` | 解析 Markdown（自动调用 autoCloseContainers） |
+| `md` | `MarkdownIt` | 底层 markdown-it 实例，可用于进一步配置 |
+
+---
 
 ## `renderMarkdown`
 
-底层 Markdown 渲染函数，内部调用了 `autoCloseContainers`。
+向后兼容 v1 的快捷函数。
 
 ```typescript
 import { renderMarkdown } from '@krishanjinbo/vue-markdown-stream'
 
-const html: string = renderMarkdown('# Hello\n::: alert info\n内容\n:::')
+const html: string = renderMarkdown('# Hello')
 ```
 
-**返回值：** 包含 `<vue-block>` 占位元素的 HTML 字符串（供 `MarkdownRenderer` 内部使用）。通常不需要直接调用此函数。
+::: warning 已弃用
+建议使用 `useMarkdownParser().parse()` 替代。
+:::

@@ -1,6 +1,6 @@
 # 在线演示
 
-下方是 `vue-markdown-stream` 的完整功能演示。点击「开始演示」观看流式输出效果——Markdown 内容会逐字渲染，`:::alert` 和 `:::card` 块会在出现时实时挂载为 Vue 组件。
+下方是 `vue-markdown-stream` v2 的完整功能演示。点击「开始演示」观看流式输出效果——Markdown 内容会逐字渲染，`:::alert`、`:::card`、`:::confirm`、`:::progress`、`:::datatable`、`:::actions` 等块会在出现时实时挂载为 Vue 组件。
 
 <StreamDemo />
 
@@ -16,47 +16,51 @@
 ::: alert warning
 注意：这是一条警告信息。
 :::
-
-::: alert success
-操作成功！
-:::
-
-::: alert error
-发生错误，请检查配置。
-:::
 ```
 
 ### Card 块
 
 ```markdown
 ::: card 技术栈对比
-
 | 方案 | 性能 | 体积 |
 |------|------|------|
 | h() + DOMParser | ✅ 优秀 | ✅ 轻量 |
-| compile() | ❌ 每次重编译 | ❌ +14KB |
-
 :::
 ```
 
-### 混合使用
+### Confirm 块（v2 新增）
 
 ```markdown
-# 分析报告
-
-数据处理完成，以下是结果：
-
-::: alert success
-所有 **1,024** 条记录处理成功，耗时 `1.2s`。
+::: confirm action="delete_user" level=danger
+确认要删除用户 **张三** 吗？此操作不可撤销。
 :::
+```
 
-::: card 统计摘要
+### Progress 块（v2 新增）
 
-| 指标 | 数值 |
-|------|------|
-| 总记录数 | 1,024 |
-| 成功 | 1,021 |
-| 跳过 | 3 |
+```markdown
+::: progress value=73 max=100 status=active
+正在导入数据... 已处理 73/100 条
+:::
+```
 
+### DataTable 块（v2 新增）
+
+```markdown
+::: datatable sortable filterable
+| 姓名 | 部门 | 状态 |
+|------|------|------|
+| 张三 | 研发 | 在线 |
+| 李四 | 产品 | 离线 |
+:::
+```
+
+### Actions 块（v2 新增）
+
+```markdown
+::: actions
+- 查看处理进度
+- 生成报告
+- 导出数据
 :::
 ```

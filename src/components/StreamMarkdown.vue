@@ -1,22 +1,33 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import MarkdownRenderer from './MarkdownRenderer'
 import { useStreamingText } from '../composables/useStreamingText'
+import { useAgentEvents } from '../composables/useAgentEvents'
+import type { AgentActionPayload } from '../core/eventBus'
 
 const { text, isStreaming, startStream, stopStream, resetStream } = useStreamingText()
+const { createHandler, serializeToMessage } = useAgentEvents()
 
 // 打字机光标：仅在流式输出时显示
 const displayText = computed(() =>
   isStreaming.value ? text.value + '▍' : text.value
 )
+
+// 事件日志
+const eventLogs = ref<string[]>([])
+
+const handleAction = createHandler(async (payload: AgentActionPayload) => {
+  const message = serializeToMessage(payload)
+  eventLogs.value.push(message)
+})
 </script>
 
 <template>
   <div class="stream-page">
     <header class="stream-header">
-      <h1 class="page-title">流式 Markdown 渲染</h1>
+      <h1 class="page-title">Agent UI Protocol v2</h1>
       <p class="page-subtitle">
-        使用 <code>markdown-it-container</code> 将特定块渲染为 Vue 组件
+        流式 Markdown 渲染 + Vue 组件块 + Agent 事件回传
       </p>
 
       <div class="controls">
@@ -36,7 +47,7 @@ const displayText = computed(() =>
         </button>
         <button
           class="btn btn-ghost"
-          @click="resetStream"
+          @click="resetStream(); eventLogs = []"
         >
           重置
         </button>
@@ -44,9 +55,26 @@ const displayText = computed(() =>
     </header>
 
     <div class="stream-content">
-      <MarkdownRenderer :content="displayText" />
+      <MarkdownRenderer
+        :content="displayText"
+        @agent:action="handleAction"
+      />
       <div v-if="!text" class="empty-hint">
         点击「开始流式输出」查看渲染效果
+      </div>
+    </div>
+
+    <!-- Agent 事件日志面板 -->
+    <div v-if="eventLogs.length > 0" class="event-panel">
+      <h3 class="event-panel-title">Agent 事件日志</h3>
+      <div class="event-list">
+        <div
+          v-for="(log, i) in eventLogs"
+          :key="i"
+          class="event-item"
+        >
+          {{ log }}
+        </div>
       </div>
     </div>
   </div>
@@ -77,14 +105,6 @@ const displayText = computed(() =>
   color: #6b7280;
   font-size: 0.95rem;
   margin: 0 0 20px;
-}
-
-.page-subtitle code {
-  background: #f3f4f6;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 0.9em;
-  color: #7c3aed;
 }
 
 .controls {
@@ -144,5 +164,36 @@ const displayText = computed(() =>
   color: #9ca3af;
   font-size: 0.9em;
   padding: 60px 0;
+}
+
+.event-panel {
+  margin-top: 32px;
+  padding: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.event-panel-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #475569;
+  margin: 0 0 12px;
+}
+
+.event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.event-item {
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.85em;
+  color: #334155;
+  font-family: 'SF Mono', 'Fira Code', monospace;
 }
 </style>

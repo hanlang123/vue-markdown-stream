@@ -1,26 +1,30 @@
 # 介绍
 
-`vue-markdown-stream` 是一个为 **AI 流式输出场景**设计的 Vue 3 库，能够将 Markdown 内容中通过 `markdown-it-container` 定义的 `:::` 容器块实时渲染为真实的 Vue 组件。
+`vue-markdown-stream` 是一个为 **AI Agent 场景**设计的 Vue 3 库。它将 Markdown 内容中的 `:::` 容器块实时渲染为真实 Vue 组件，并支持组件向 Agent 回传用户交互事件。
 
-## 为什么需要它？
+## v2 新增能力
 
-在接入 LLM 流式输出时，你通常会遇到以下需求：
-
-- **逐字渲染**：每收到一个 token 就实时更新 UI
-- **富文本支持**：代码块、表格、粗体等 Markdown 语法需要正确渲染
-- **组件级扩展**：某些特殊内容（告警、卡片、图表）需要渲染为专门的 Vue 组件，而不只是普通 HTML
-
-传统方案通常是直接 `v-html` 渲染，但这样就失去了 Vue 组件的能力（响应式、交互、样式隔离等）。
+| 能力 | v1 | v2 |
+|------|----|----|
+| 流式打字机渲染 | ✅ | ✅ |
+| alert / card 组件块 | ✅ | ✅ |
+| 自定义块扩展 | 修改源码 | **Props 传入 componentMap** |
+| Confirm / Select / Form / Progress / DataTable / Actions | ❌ | ✅ |
+| 组件事件回传 Agent | ❌ | ✅ **AgentEventBus** |
+| Props 安全校验 | ❌ | ✅ **白名单 + 黑名单** |
+| `@agent:action` 事件 | ❌ | ✅ |
 
 ## 核心架构
 
 ```
 流式文本 chunk
-  ↓ autoCloseContainers()        补全未闭合 ::: 块（流式中间态处理）
-  ↓ markdown-it + container      输出含 <vue-block> 占位元素的 HTML
-  ↓ DOMParser                    HTML 字符串 → DOM 树
-  ↓ domNodeToVNode()             递归转换：<vue-block> → h(Vue组件, props, slots)
-  ↓ MarkdownRenderer             h('div.markdown-body', vnodes)
+  → autoCloseContainers()       补全未闭合 ::: 块（增强版）
+  → markdown-it + container     输出含 <vue-block> 的 HTML
+  → DOMParser                   HTML → DOM 树
+  → PropValidator               Props 白名单校验 + 清洗
+  → h() VNode 构建              <vue-block> → Vue 组件 VNode + 事件绑定
+  → AgentEventBus               组件事件 → 宿主应用回调
+  → MarkdownRenderer            渲染输出 + @agent:action 事件
 ```
 
 ## 为什么不用 `compile()`？
@@ -35,9 +39,11 @@ Vue 的运行时编译（`compile()`）会：
 ## 功能特性
 
 - ✅ 流式打字机效果，支持任意速度的 chunk 追加
-- ✅ `:::alert` 块 → `AlertBlock` 组件（4 种类型）
-- ✅ `:::card` 块 → `DataCard` 组件（支持标题和 slot 内容）
+- ✅ `:::alert` / `:::card` 渲染为 Vue 组件（向后兼容 v1）
+- ✅ `:::confirm` / `:::select` / `:::form` / `:::progress` / `:::datatable` / `:::actions` 交互组件
+- ✅ `AgentEventBus` 事件系统，组件交互 → 宿主应用 → Agent
+- ✅ `PropValidator` Props 白名单校验 + 值清洗 + 类型转换
+- ✅ 通过 props 传入自定义 `componentMap` 和 `propsSchemas`
 - ✅ 未闭合块自动补全，中间态渲染始终合法
-- ✅ 自定义块组件扩展（5 行代码注册）
 - ✅ 完整 TypeScript 类型支持
-- ✅ ESM + CJS 双格式输出
+- ✅ ESM + CJS 双格式输出，内置组件支持 tree-shaking

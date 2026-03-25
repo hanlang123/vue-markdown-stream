@@ -1,16 +1,15 @@
 import { ref } from 'vue'
 
-const MOCK_TEXT = `# 流式 Markdown 渲染演示
+const MOCK_TEXT = `# Agent UI Protocol 演示
 
-这是一个演示**流式输出 Markdown 内容**并将特定块渲染为 Vue 组件的示例。
+这是一个演示 **Agent UI Protocol v2** 流式输出 + 交互组件的示例。
 
-## 功能特性
+## 基础 Markdown 渲染
 
 - ✅ 流式打字机渲染
 - ✅ 普通 Markdown 语法（标题、粗体、代码等）
 - ✅ \`:::alert\` 块 → AlertBlock 组件
 - ✅ \`:::card\` 块 → DataCard 组件
-- ✅ 流式未闭合时自动补全容器
 
 ## 代码示例
 
@@ -25,6 +24,38 @@ md.use(container, 'alert', {
 
 ::: alert info
 **渲染原理**：markdown-it-container 的 \`render\` 回调输出自定义 \`<vue-block>\` 占位元素，再由 \`DOMParser\` 递归转为 \`h()\` VNode 树。
+:::
+
+## v2 新增：交互组件
+
+### 确认操作
+
+::: confirm action="delete_user" level=danger
+确认要删除用户 **张三** 吗？此操作不可撤销。
+:::
+
+### 进度展示
+
+::: progress value=73 max=100 status=active
+正在导入数据... 已处理 73/100 条
+:::
+
+### 数据表格
+
+::: datatable sortable filterable
+| 姓名 | 部门 | 状态 |
+|------|------|------|
+| 张三 | 研发 | 在线 |
+| 李四 | 产品 | 离线 |
+| 王五 | 设计 | 忙碌 |
+:::
+
+### 快捷操作
+
+::: actions
+- 查看处理进度
+- 生成报告
+- 导出数据
 :::
 
 ## 数据展示
@@ -43,20 +74,18 @@ md.use(container, 'alert', {
 :::
 
 ::: alert success
-✨ 所有功能均已实现！当前页面正是流式渲染的实时效果，块组件完整挂载了 Vue 响应式系统。
+✨ Agent UI Protocol v2 已就绪！支持 Confirm / Select / Form / Progress / DataTable / Actions 等交互组件。
 :::
 
 ::: card 实现步骤
 
 1. **预处理**：\`autoCloseContainers()\` 补全未闭合 \`:::\`
 2. **解析**：\`markdown-it\` + \`markdown-it-container\` 输出含 \`<vue-block>\` 的 HTML
-3. **转换**：\`DOMParser\` 遍历 DOM，将 \`<vue-block>\` 节点替换为 \`h(Vue组件)\`
-4. **渲染**：\`MarkdownRenderer\` 组件通过 render 函数返回 VNode 树
+3. **校验**：\`PropValidator\` 对 Props 进行白名单校验 + 清洗
+4. **转换**：\`DOMParser\` 遍历 DOM，将 \`<vue-block>\` 替换为 \`h(Vue组件)\`
+5. **事件**：\`AgentEventBus\` 将组件交互事件传递给宿主应用
+6. **渲染**：\`MarkdownRenderer\` 组件通过 render 函数返回 VNode 树
 
-:::
-
-::: alert error
-注意：此方案仅适用于**客户端渲染**场景，SSR 环境下需将 \`DOMParser\` 替换为 \`parse5\`。
 :::
 
 ---

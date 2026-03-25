@@ -16,9 +16,9 @@ export default defineConfig({
               'src/index.ts',
               'src/components/MarkdownRenderer.ts',
               'src/components/blocks',
-              'src/composables/useMarkdownParser.ts',
-              'src/composables/useStreamingText.ts',
-              'src/utils',
+              'src/composables',
+              'src/core',
+              'src/types',
             ],
           }),
         ]
