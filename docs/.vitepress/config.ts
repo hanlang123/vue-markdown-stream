@@ -67,4 +67,10 @@ export default defineConfig({
       provider: 'local',
     },
   },
+
+  vite: {
+    ssr: {
+      noExternal: ['markdown-it', 'markdown-it-container'],
+    },
+  },
 })
