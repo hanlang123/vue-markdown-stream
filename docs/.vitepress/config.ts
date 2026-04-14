@@ -12,6 +12,12 @@ export default defineConfig({
     ['meta', { property: 'og:description', content: 'Agent UI Protocol — 流式 Markdown + Vue 交互组件' }],
   ],
 
+  vite: {
+    ssr: {
+      noExternal: ['markdown-it', 'markdown-it-container'],
+    },
+  },
+
   themeConfig: {
     nav: [
       { text: '指南', link: '/guide/introduction' },

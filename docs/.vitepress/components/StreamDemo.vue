@@ -18,7 +18,9 @@ const displayText = computed(() => (isStreaming.value ? text.value + '▍' : tex
       <button class="demo-btn ghost" @click="resetStream">↺ 重置</button>
     </div>
     <div class="demo-output">
-      <MarkdownRenderer :content="displayText" />
+      <ClientOnly>
+        <MarkdownRenderer :content="displayText" />
+      </ClientOnly>
       <p v-if="!text" class="demo-hint">点击「开始演示」查看流式渲染效果</p>
     </div>
   </div>
