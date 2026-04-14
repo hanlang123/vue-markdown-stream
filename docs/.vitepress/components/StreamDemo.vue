@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-// 直接引用源文件，VitePress 构建时会正确处理
-import MarkdownRenderer from '../../../src/components/MarkdownRenderer'
+import { computed, ref, onMounted, shallowRef, type Component } from 'vue'
 import { useStreamingText } from '../../../src/composables/useStreamingText'
 
 const { text, isStreaming, startStream, stopStream, resetStream } = useStreamingText()
 const displayText = computed(() => (isStreaming.value ? text.value + '▍' : text.value))
+
+const RendererComp = shallowRef<Component | null>(null)
+const ready = ref(false)
+
+onMounted(async () => {
+  const mod = await import('../../../src/components/MarkdownRenderer')
+  RendererComp.value = mod.default
+  ready.value = true
+})
 </script>
 
 <template>
@@ -18,9 +25,7 @@ const displayText = computed(() => (isStreaming.value ? text.value + '▍' : tex
       <button class="demo-btn ghost" @click="resetStream">↺ 重置</button>
     </div>
     <div class="demo-output">
-      <ClientOnly>
-        <MarkdownRenderer :content="displayText" />
-      </ClientOnly>
+      <component v-if="ready && RendererComp" :is="RendererComp" :content="displayText" />
       <p v-if="!text" class="demo-hint">点击「开始演示」查看流式渲染效果</p>
     </div>
   </div>
