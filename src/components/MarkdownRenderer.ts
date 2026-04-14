@@ -1,5 +1,5 @@
 import {
-  defineComponent, h, watch, ref, provide, onBeforeUnmount,
+  defineComponent, h, watch, shallowRef, provide, onBeforeUnmount,
   type PropType, type VNode
 } from 'vue'
 import { useMarkdownParser } from '../composables/useMarkdownParser'
@@ -79,7 +79,7 @@ export default defineComponent({
 
     // Markdown 解析器
     const { parse } = useMarkdownParser()
-    const vnodes = ref<VNode[]>([])
+    const vnodes = shallowRef<VNode[]>([])
 
     // 自增的块 ID（用于没有指定 data-id 的组件）
     let blockIdCounter = 0
