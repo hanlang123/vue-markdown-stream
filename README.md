@@ -12,7 +12,8 @@
 ## 特性
 
 - **流式打字机渲染** — 逐字追加，自动补全未闭合 `:::` 块
-- **8 种内置组件块** — alert / card / confirm / select / form / progress / datatable / actions
+- **9 种内置组件块** — alert / card / confirm / select / form / progress / datatable / actions / artifact
+- **Artifact 面板** — 类似 Claude Code 的 Artifact 机制，支持代码/HTML/SVG/文档展示，可复制、下载、折叠
 - **事件回传** — AgentEventBus 将用户交互回传给宿主应用，闭环 Agent 流程
 - **Props 安全校验** — 白名单 + 黑名单 + 类型转换，防止 LLM 注入
 - **完全可扩展** — 通过 props 传入自定义 componentMap 和 propsSchemas
@@ -80,6 +81,16 @@ const handleAction = createHandler(async (payload) => {
 - 查看进度
 - 生成报告
 - 导出数据
+:::
+
+::: artifact type="code" lang="python" title="Hello World"
+print("Hello, World!")
+:::
+
+::: artifact type="html" title="预览卡片"
+<div style="padding:16px; background:#f0f9ff; border-radius:8px;">
+  <h3>Hello Artifact!</h3>
+</div>
 :::
 ```
 
