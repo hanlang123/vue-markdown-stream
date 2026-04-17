@@ -10,6 +10,7 @@ export { default as FormBlock } from './components/blocks/FormBlock.vue'
 export { default as ProgressBlock } from './components/blocks/ProgressBlock.vue'
 export { default as DataTableBlock } from './components/blocks/DataTableBlock.vue'
 export { default as ActionPills } from './components/blocks/ActionPills.vue'
+export { default as ArtifactBlock } from './components/blocks/ArtifactBlock.vue'
 
 // ======== Composables ========
 export { useStreamingText } from './composables/useStreamingText'
