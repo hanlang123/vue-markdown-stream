@@ -2,7 +2,7 @@ import {
   defineComponent, h, watch, shallowRef, provide, onBeforeUnmount,
   type PropType, type VNode
 } from 'vue'
-import { useMarkdownParser } from '../composables/useMarkdownParser'
+import { useMarkdownParser, type MarkdownParserOptions } from '../composables/useMarkdownParser'
 import { createAgentEventBus, type AgentEventBus, type AgentActionPayload } from '../core/eventBus'
 import { validateProps, sanitizePayload, type ComponentPropsSchema, defaultSchemas } from '../core/propValidator'
 import { builtinComponentMap } from './blocks'
@@ -38,6 +38,27 @@ export default defineComponent({
      * [v2 新增] 是否启用 Props 安全校验（默认启用）
      */
     enableValidation: {
+      type: Boolean,
+      default: true,
+    },
+    /**
+     * [v2 新增] 是否启用 LaTeX 数学公式（默认启用）
+     */
+    enableMath: {
+      type: Boolean,
+      default: true,
+    },
+    /**
+     * [v2 新增] 是否启用 Mermaid 图表（默认启用）
+     */
+    enableMermaid: {
+      type: Boolean,
+      default: true,
+    },
+    /**
+     * [v2 新增] 是否启用脚注（默认启用）
+     */
+    enableFootnote: {
       type: Boolean,
       default: true,
     },
@@ -77,8 +98,13 @@ export default defineComponent({
     // 通过 provide 注入给所有子组件
     provide(AGENT_EVENT_BUS_KEY, eventBus)
 
-    // Markdown 解析器
-    const { parse } = useMarkdownParser()
+    // Markdown 解析器（根据 props 配置启用/禁用功能）
+    const parserOptions: MarkdownParserOptions = {
+      math: props.enableMath,
+      mermaid: props.enableMermaid,
+      footnote: props.enableFootnote,
+    }
+    const { parse } = useMarkdownParser(parserOptions)
     const vnodes = shallowRef<VNode[]>([])
 
     // 自增的块 ID（用于没有指定 data-id 的组件）

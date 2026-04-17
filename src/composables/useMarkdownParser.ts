@@ -1,6 +1,20 @@
 import MarkdownIt from 'markdown-it'
 import container from 'markdown-it-container'
+import footnote from 'markdown-it-footnote'
+import { katex as katexPlugin } from '@mdit/plugin-katex'
 import { autoCloseContainers } from '../core/autoCloseContainers'
+
+/**
+ * useMarkdownParser 的配置选项
+ */
+export interface MarkdownParserOptions {
+  /** 是否启用脚注支持（默认 true） */
+  footnote?: boolean
+  /** 是否启用 LaTeX 数学公式（默认 true） */
+  math?: boolean
+  /** 是否启用 Mermaid 图表（默认 true） */
+  mermaid?: boolean
+}
 
 /**
  * 解析块属性字符串
@@ -155,9 +169,51 @@ const BLOCK_CONFIGS = [
 
 /**
  * 创建 Markdown 解析器（增强版）
+ *
+ * @param options - 可选配置，按需启用/禁用功能模块
  */
-export function useMarkdownParser() {
+export function useMarkdownParser(options: MarkdownParserOptions = {}) {
+  const { footnote: enableFootnote = true, math: enableMath = true, mermaid: enableMermaid = true } = options
+
   const md = new MarkdownIt({ html: true, linkify: true, typographer: true })
+
+  // 注册脚注插件
+  if (enableFootnote) {
+    md.use(footnote)
+  }
+
+  // 注册 KaTeX 数学公式插件
+  if (enableMath) {
+    md.use(katexPlugin, {
+      throwOnError: false,
+      mathFence: true,
+    })
+  }
+
+  // 自定义 fence 渲染器 — Mermaid 代码块输出为 vue-block
+  if (enableMermaid) {
+    const defaultFenceRenderer = md.renderer.rules.fence
+    md.renderer.rules.fence = (tokens, idx, options, env, self) => {
+      const token = tokens[idx]!
+      const info = token.info ? token.info.trim() : ''
+
+      if (info === 'mermaid') {
+        // 将 mermaid 代码编码为 data-code 属性
+        const code = token.content
+          .replace(/&/g, '&amp;')
+          .replace(/"/g, '&quot;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+        return `<vue-block data-component="MermaidBlock" data-code="${code}"></vue-block>\n`
+      }
+
+      // 非 mermaid 代码块使用默认渲染
+      if (defaultFenceRenderer) {
+        return defaultFenceRenderer(tokens, idx, options, env, self)
+      }
+      return self.renderToken(tokens, idx, options)
+    }
+  }
 
   // 注册所有容器块
   for (const config of BLOCK_CONFIGS) {

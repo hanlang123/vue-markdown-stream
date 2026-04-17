@@ -6,6 +6,7 @@ export { default as FormBlock } from './FormBlock.vue'
 export { default as ProgressBlock } from './ProgressBlock.vue'
 export { default as DataTableBlock } from './DataTableBlock.vue'
 export { default as ActionPills } from './ActionPills.vue'
+export { default as MermaidBlock } from './MermaidBlock.vue'
 
 import type { ComponentMap } from '../../types'
 import AlertBlock from './AlertBlock.vue'
@@ -16,6 +17,7 @@ import FormBlock from './FormBlock.vue'
 import ProgressBlock from './ProgressBlock.vue'
 import DataTableBlock from './DataTableBlock.vue'
 import ActionPills from './ActionPills.vue'
+import MermaidBlock from './MermaidBlock.vue'
 
 /**
  * 默认的内置组件注册表
@@ -29,4 +31,5 @@ export const builtinComponentMap: ComponentMap = {
   ProgressBlock,
   DataTableBlock,
   ActionPills,
+  MermaidBlock,
 }

@@ -34,12 +34,24 @@ export default defineConfig({
             formats: ['es', 'cjs'],
           },
           rollupOptions: {
-            external: ['vue', 'markdown-it', 'markdown-it-container'],
+            external: [
+              'vue',
+              'markdown-it',
+              'markdown-it-container',
+              'markdown-it-footnote',
+              '@mdit/plugin-katex',
+              'katex',
+              'mermaid',
+            ],
             output: {
               globals: {
                 vue: 'Vue',
                 'markdown-it': 'MarkdownIt',
                 'markdown-it-container': 'MarkdownItContainer',
+                'markdown-it-footnote': 'MarkdownItFootnote',
+                '@mdit/plugin-katex': 'MditPluginKatex',
+                katex: 'katex',
+                mermaid: 'mermaid',
               },
             },
           },

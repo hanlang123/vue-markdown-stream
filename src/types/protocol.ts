@@ -11,6 +11,7 @@ export const SUPPORTED_BLOCKS = [
   'confirm', 'select', 'form',  // v2 交互组件
   'progress', 'datatable',      // v2 展示组件
   'actions',                    // v2 快捷操作
+  'mermaid',                    // v2 图表组件
 ] as const
 
 export type SupportedBlock = typeof SUPPORTED_BLOCKS[number]

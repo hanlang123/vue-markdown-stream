@@ -130,3 +130,61 @@ body {
   margin: 1.5em 0;
 }
 
+/* ─── Footnotes ─────────────────────────────────────────── */
+.markdown-body .footnotes-sep {
+  border-top: 1px solid #e5e7eb;
+  margin-top: 2em;
+  padding-top: 0;
+}
+
+.markdown-body .footnotes {
+  font-size: 0.85em;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.markdown-body .footnotes ol {
+  padding-left: 1.5em;
+}
+
+.markdown-body .footnotes li {
+  margin: 0.3em 0;
+}
+
+.markdown-body .footnote-ref a {
+  text-decoration: none;
+  color: #6366f1;
+  font-weight: 600;
+}
+
+.markdown-body .footnote-ref a::before {
+  content: '[';
+}
+
+.markdown-body .footnote-ref a::after {
+  content: ']';
+}
+
+.markdown-body .footnote-backref {
+  text-decoration: none;
+  color: #6366f1;
+  margin-left: 4px;
+}
+
+/* ─── KaTeX Math ────────────────────────────────────────── */
+.markdown-body .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 8px 0;
+  margin: 0.5em 0;
+  text-align: center;
+}
+
+.markdown-body .katex {
+  font-size: 1.1em;
+}
+
+.markdown-body .katex-display > .katex {
+  white-space: nowrap;
+}
+

@@ -11,7 +11,12 @@
     "markdown-it-container",
     "vue-component",
     "typewriter",
-    "ai-streaming"
+    "ai-streaming",
+    "katex",
+    "latex",
+    "math",
+    "mermaid",
+    "footnote"
   ],
   "license": "MIT",
   "author": "hanlang123",
@@ -50,18 +55,31 @@
     "docs:preview": "vitepress preview docs"
   },
   "peerDependencies": {
+    "katex": ">=0.16.0",
     "markdown-it": ">=14.0.0",
     "markdown-it-container": ">=4.0.0",
+    "mermaid": ">=11.0.0",
     "vue": ">=3.3.0"
   },
+  "peerDependenciesMeta": {
+    "katex": {
+      "optional": true
+    },
+    "mermaid": {
+      "optional": true
+    }
+  },
   "dependencies": {
+    "@mdit/plugin-katex": "^0.25.2",
     "markdown-it": "^14.1.1",
     "markdown-it-container": "^4.0.0",
+    "markdown-it-footnote": "^4.0.0",
     "vue": "^3.5.25"
   },
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",
     "@types/markdown-it-container": "^4.0.0",
+    "@types/markdown-it-footnote": "^3.0.4",
     "@types/node": "^24.10.1",
     "@vitejs/plugin-vue": "^6.0.2",
     "@vue/tsconfig": "^0.8.1",

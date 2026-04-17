@@ -10,6 +10,7 @@ export { default as FormBlock } from './components/blocks/FormBlock.vue'
 export { default as ProgressBlock } from './components/blocks/ProgressBlock.vue'
 export { default as DataTableBlock } from './components/blocks/DataTableBlock.vue'
 export { default as ActionPills } from './components/blocks/ActionPills.vue'
+export { default as MermaidBlock } from './components/blocks/MermaidBlock.vue'
 
 // ======== Composables ========
 export { useStreamingText } from './composables/useStreamingText'
@@ -25,4 +26,5 @@ export { autoCloseContainers } from './core/autoCloseContainers'
 export type { AgentActionPayload, AgentEventBus, AgentActionHandler } from './core/eventBus'
 export type { ComponentPropsSchema, PropRule } from './core/propValidator'
 export type { ComponentMap, BlockBaseProps } from './types'
+export type { MarkdownParserOptions } from './composables/useMarkdownParser'
 export { PROTOCOL_VERSION, SUPPORTED_BLOCKS } from './types/protocol'

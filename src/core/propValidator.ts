@@ -82,6 +82,12 @@ export const defaultSchemas: Record<string, ComponentPropsSchema> = {
   // AlertBlock 和 DataCard 保持兼容，不加校验限制
   AlertBlock: { allowed: { type: { type: 'enum', enum: ['info', 'success', 'warning', 'error'], default: 'info' } } },
   DataCard: { allowed: { title: { type: 'string', maxLength: 100 } } },
+  // MermaidBlock: code 属性白名单
+  MermaidBlock: {
+    allowed: {
+      code: { type: 'string', maxLength: 50000 },
+    },
+  },
 }
 
 /**
