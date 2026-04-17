@@ -4,6 +4,40 @@ import type { AgentEventBus } from '../../core/eventBus'
 
 type ArtifactType = 'code' | 'html' | 'svg' | 'document' | 'mermaid' | 'text'
 
+/**
+ * 基础 HTML 清洗 — 移除危险标签和事件属性以减轻 XSS 风险
+ * 注意：这是一个轻量级清洗方案。在生产环境中建议集成 DOMPurify。
+ */
+function sanitizeHTML(html: string): string {
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(html, 'text/html')
+
+  // 移除危险标签
+  const dangerousTags = ['script', 'iframe', 'object', 'embed', 'link', 'meta', 'base', 'applet']
+  for (const tag of dangerousTags) {
+    const elements = doc.body.querySelectorAll(tag)
+    elements.forEach(el => el.remove())
+  }
+
+  // 移除所有事件属性 (on*)
+  const allElements = doc.body.querySelectorAll('*')
+  allElements.forEach(el => {
+    const attrs = Array.from(el.attributes)
+    for (const attr of attrs) {
+      if (attr.name.startsWith('on') || attr.name === 'srcdoc' || attr.name === 'formaction') {
+        el.removeAttribute(attr.name)
+      }
+      // 移除 javascript: 协议的 href/src
+      if ((attr.name === 'href' || attr.name === 'src' || attr.name === 'action') &&
+          attr.value.replace(/\s/g, '').toLowerCase().startsWith('javascript:')) {
+        el.removeAttribute(attr.name)
+      }
+    }
+  })
+
+  return doc.body.innerHTML
+}
+
 const props = withDefaults(defineProps<{
   type?: ArtifactType
   lang?: string
@@ -65,6 +99,11 @@ function parseSlot() {
 onMounted(parseSlot)
 onUpdated(parseSlot)
 
+/**
+ * 清洗后的 HTML 内容，用于 v-html 渲染
+ */
+const safeContent = computed(() => sanitizeHTML(rawContent.value))
+
 const typeIcon = computed(() => {
   const icons: Record<ArtifactType, string> = {
     code: '📄',
@@ -104,17 +143,8 @@ async function handleCopy() {
     copied.value = true
     setTimeout(() => { copied.value = false }, 2000)
   } catch {
-    // Fallback for non-secure contexts
-    const textarea = document.createElement('textarea')
-    textarea.value = textToCopy
-    textarea.style.position = 'fixed'
-    textarea.style.opacity = '0'
-    document.body.appendChild(textarea)
-    textarea.select()
-    document.execCommand('copy')
-    document.body.removeChild(textarea)
-    copied.value = true
-    setTimeout(() => { copied.value = false }, 2000)
+    // Clipboard API 不可用时（非 HTTPS 环境），静默降级
+    console.warn('[ArtifactBlock] Clipboard API not available, copy action skipped')
   }
 
   emit('agent-action', 'copy', {
@@ -235,22 +265,22 @@ function toggleCollapse() {
         <pre class="artifact-code"><code>{{ rawContent }}</code></pre>
       </template>
 
-      <!-- HTML type: live preview -->
+      <!-- HTML type: live preview (sanitized) -->
       <template v-else-if="props.type === 'html'">
         <!-- eslint-disable-next-line vue/no-v-html -->
-        <div class="artifact-html-preview" v-html="rawContent" />
+        <div class="artifact-html-preview" v-html="safeContent" />
       </template>
 
-      <!-- SVG type: rendered SVG -->
+      <!-- SVG type: rendered SVG (sanitized) -->
       <template v-else-if="props.type === 'svg'">
         <!-- eslint-disable-next-line vue/no-v-html -->
-        <div class="artifact-svg-preview" v-html="rawContent" />
+        <div class="artifact-svg-preview" v-html="safeContent" />
       </template>
 
-      <!-- Document / Mermaid / Text: rendered content -->
+      <!-- Document / Mermaid / Text: rendered content (sanitized) -->
       <template v-else>
         <!-- eslint-disable-next-line vue/no-v-html -->
-        <div class="artifact-document" v-html="rawContent" />
+        <div class="artifact-document" v-html="safeContent" />
       </template>
     </div>
   </div>
@@ -445,7 +475,7 @@ function toggleCollapse() {
 }
 
 /* Type-specific border accents */
-.artifact-code-type { border-left: 3px solid #6366f1; }
+.artifact-code { border-left: 3px solid #6366f1; }
 .artifact-html { border-left: 3px solid #f97316; }
 .artifact-svg { border-left: 3px solid #8b5cf6; }
 .artifact-document { border-left: 3px solid #06b6d4; }
