@@ -77,6 +77,48 @@ md.use(container, 'alert', {
 ✨ Agent UI Protocol v2 已就绪！支持 Confirm / Select / Form / Progress / DataTable / Actions 等交互组件。
 :::
 
+### Artifact 内容块
+
+以下是 Artifact 机制示例，类似 Claude Code 的 Artifact 面板，支持代码、HTML、SVG、文档等内容类型：
+
+::: artifact type="code" lang="typescript" title="EventBus 示例"
+import { createAgentEventBus } from 'vue-markdown-stream'
+
+const bus = createAgentEventBus()
+
+bus.on((payload) => {
+  console.log('Action:', payload.event)
+  console.log('Data:', payload.data)
+})
+
+// 组件内部触发
+bus.emit({
+  blockId: 'demo-1',
+  event: 'confirm',
+  componentType: 'ConfirmBlock',
+  data: { action: 'delete', confirmed: true },
+})
+:::
+
+::: artifact type="html" title="HTML 预览卡片"
+<div style="padding:16px; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); border-radius:8px; color:white; text-align:center;">
+<h3 style="margin:0 0 8px 0;">Hello Artifact!</h3>
+<p style="margin:0; opacity:0.9;">这是一个可预览的 HTML Artifact</p>
+</div>
+:::
+
+::: artifact type="svg" title="Vue Logo"
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><polygon points="60,10 110,100 10,100" fill="#42b883"/><polygon points="60,30 90,90 30,90" fill="#35495e"/></svg>
+:::
+
+::: artifact type="document" title="项目 README"
+**vue-markdown-stream** 是一个基于 Vue 3 的流式 Markdown 渲染库。
+
+- 支持 AI Agent 流式输出
+- 内置 9 种交互组件块
+- 完整的事件回传机制
+:::
+
 ::: card 实现步骤
 
 1. **预处理**：\`autoCloseContainers()\` 补全未闭合 \`:::\`

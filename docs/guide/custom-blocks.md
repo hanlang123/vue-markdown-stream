@@ -14,6 +14,7 @@ v2 内置 8 个块组件：
 | `:::progress` | ProgressBlock | 进度展示 |
 | `:::datatable` | DataTableBlock | 数据表格 |
 | `:::actions` | ActionPills | 快捷操作气泡 |
+| `:::artifact` | ArtifactBlock | Artifact 内容面板（代码/HTML/SVG/文档） |
 
 详细用法见 [Agent 交互组件](./agent-blocks)。
 

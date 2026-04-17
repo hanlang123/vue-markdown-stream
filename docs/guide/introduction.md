@@ -10,6 +10,7 @@
 | alert / card 组件块 | ✅ | ✅ |
 | 自定义块扩展 | 修改源码 | **Props 传入 componentMap** |
 | Confirm / Select / Form / Progress / DataTable / Actions | ❌ | ✅ |
+| Artifact 内容面板（代码/HTML/SVG/文档） | ❌ | ✅ |
 | 组件事件回传 Agent | ❌ | ✅ **AgentEventBus** |
 | Props 安全校验 | ❌ | ✅ **白名单 + 黑名单** |
 | `@agent:action` 事件 | ❌ | ✅ |
@@ -41,6 +42,7 @@ Vue 的运行时编译（`compile()`）会：
 - ✅ 流式打字机效果，支持任意速度的 chunk 追加
 - ✅ `:::alert` / `:::card` 渲染为 Vue 组件（向后兼容 v1）
 - ✅ `:::confirm` / `:::select` / `:::form` / `:::progress` / `:::datatable` / `:::actions` 交互组件
+- ✅ `:::artifact` 内容面板 — 类似 Claude Code Artifact，支持代码/HTML/SVG/文档展示、复制、下载
 - ✅ `AgentEventBus` 事件系统，组件交互 → 宿主应用 → Agent
 - ✅ `PropValidator` Props 白名单校验 + 值清洗 + 类型转换
 - ✅ 通过 props 传入自定义 `componentMap` 和 `propsSchemas`

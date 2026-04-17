@@ -42,6 +42,7 @@ export default defineConfig({
             { text: '流式输出', link: '/guide/streaming' },
             { text: '自定义块', link: '/guide/custom-blocks' },
             { text: 'Agent 交互组件', link: '/guide/agent-blocks' },
+            { text: 'Artifact 内容块', link: '/guide/artifact' },
             { text: '事件系统', link: '/guide/events' },
           ],
         },

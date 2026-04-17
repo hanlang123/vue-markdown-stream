@@ -104,5 +104,6 @@ const handleAction = createHandler(async (payload) => {
 - [流式输出详解](./streaming) — 对接真实 SSE/Stream API
 - [自定义块](./custom-blocks) — 注册自己的 Vue 组件块
 - [Agent 交互组件](./agent-blocks) — 内置交互组件用法
+- [Artifact 内容块](./artifact) — 类似 Claude Code 的 Artifact 面板
 - [事件系统](./events) — AgentEventBus 详解
 - [API 参考](../api/markdown-renderer) — 完整 API 文档
