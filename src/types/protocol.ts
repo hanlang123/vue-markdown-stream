@@ -12,6 +12,7 @@ export const SUPPORTED_BLOCKS = [
   'progress', 'datatable',      // v2 展示组件
   'actions',                    // v2 快捷操作
   'mermaid',                    // v2 图表组件
+  'artifact',                   // v2 Artifact 内容块
 ] as const
 
 export type SupportedBlock = typeof SUPPORTED_BLOCKS[number]

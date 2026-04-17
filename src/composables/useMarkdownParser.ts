@@ -165,6 +165,19 @@ const BLOCK_CONFIGS = [
       return '</vue-block>\n'
     },
   },
+  {
+    name: 'artifact',
+    validate: (params: string) => /^\s*artifact/.test(params.trim()),
+    render: (tokens: any[], idx: number) => {
+      const token = tokens[idx]
+      if (token.nesting === 1) {
+        const info = token.info.trim()
+        const attrs = parseBlockAttributes(info.replace(/^artifact\s*/, ''))
+        return `<vue-block data-component="ArtifactBlock" ${attrsToDataString(attrs)}>\n`
+      }
+      return '</vue-block>\n'
+    },
+  },
 ]
 
 /**

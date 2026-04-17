@@ -2,6 +2,8 @@
 
 v2 内置了 6 个交互/展示组件，LLM 通过标准 Markdown `:::` 语法即可渲染。
 
+另有 [Artifact 内容块](./artifact)，支持代码/HTML/SVG/文档等内容的独立展示面板。
+
 ## ConfirmBlock — 确认操作
 
 ```markdown
@@ -141,3 +143,32 @@ v2 内置了 6 个交互/展示组件，LLM 通过标准 Markdown `:::` 语法�
 ### 事件
 
 - `pill_click` — `data: { text, index }`
+
+---
+
+## ArtifactBlock — 内容产物面板
+
+类似 Claude Code 的 Artifact 机制，将代码、HTML、SVG、文档等独立内容渲染为可交互的面板。
+
+```markdown
+::: artifact type="code" lang="typescript" title="示例代码"
+const greeting = "Hello, Artifact!"
+console.log(greeting)
+:::
+```
+
+### 属性
+
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `type` | `'code' \| 'html' \| 'svg' \| 'document' \| 'mermaid' \| 'text'` | `'code'` | 内容类型 |
+| `lang` | `string` | `''` | 代码语言（`type="code"` 时有效） |
+| `title` | `string` | `''` | 面板标题 |
+
+### 事件
+
+- `copy` — 用户复制内容，`data: { type, title }`
+- `download` — 用户下载文件，`data: { type, title, filename }`
+- `toggle` — 用户切换折叠，`data: { type, title, collapsed }`
+
+详见 [Artifact 内容块](./artifact) 完整文档。

@@ -11,6 +11,7 @@ export { default as ProgressBlock } from './components/blocks/ProgressBlock.vue'
 export { default as DataTableBlock } from './components/blocks/DataTableBlock.vue'
 export { default as ActionPills } from './components/blocks/ActionPills.vue'
 export { default as MermaidBlock } from './components/blocks/MermaidBlock.vue'
+export { default as ArtifactBlock } from './components/blocks/ArtifactBlock.vue'
 
 // ======== Composables ========
 export { useStreamingText } from './composables/useStreamingText'

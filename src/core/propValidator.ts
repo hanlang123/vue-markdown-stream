@@ -88,6 +88,13 @@ export const defaultSchemas: Record<string, ComponentPropsSchema> = {
       code: { type: 'string', maxLength: 50000 },
     },
   },
+  ArtifactBlock: {
+    allowed: {
+      type: { type: 'enum', enum: ['code', 'html', 'svg', 'document', 'mermaid', 'text'], default: 'code' },
+      lang: { type: 'string', maxLength: 30 },
+      title: { type: 'string', maxLength: 100 },
+    },
+  },
 }
 
 /**

@@ -31,3 +31,6 @@ docs/.vitepress/dist
 src/**/*.js
 src/**/*.d.ts
 src/**/*.js.map
+
+# Keep ambient type declarations
+!src/types/*.d.ts
