@@ -39,6 +39,7 @@ export default defineConfig({
           items: [
             { text: '介绍', link: '/guide/introduction' },
             { text: '快速上手', link: '/guide/getting-started' },
+            { text: '从 0 到聊天应用', link: '/guide/chat-quickstart' },
             { text: '流式输出', link: '/guide/streaming' },
             { text: '自定义块', link: '/guide/custom-blocks' },
             { text: 'Agent 交互组件', link: '/guide/agent-blocks' },

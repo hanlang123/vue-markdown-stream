@@ -1,202 +1,109 @@
 import MarkdownIt from 'markdown-it'
 import container from 'markdown-it-container'
 import { autoCloseContainers } from '../core/autoCloseContainers'
+import {
+  applyParseInfo,
+  attrsToDataHtml,
+  createBlockRegistry,
+  defaultComponentName,
+  type BlockDefinition,
+  type BlockRegistry,
+} from '../core/blockRegistry'
+import { createBuiltinBlocks } from '../components/blocks'
 
-/**
- * 解析块属性字符串
- * 输入: 'action="delete" level=warning id=my-confirm'
- * 输出: { action: 'delete', level: 'warning', id: 'my-confirm' }
- */
-function parseBlockAttributes(attrStr: string): Record<string, string> {
-  const attrs: Record<string, string> = {}
-  // 匹配 key=value 或 key="value with spaces"
-  const regex = /(\w[\w-]*)=(?:"([^"]*)"|(\S+))/g
-  let match
-  while ((match = regex.exec(attrStr)) !== null) {
-    attrs[match[1]!] = match[2] ?? match[3] ?? ''
-  }
-  // 匹配独立的布尔属性（无 = 号）
-  const boolRegex = /(?:^|\s)(\w[\w-]*)(?=\s|$)/g
-  const cleaned = attrStr.replace(/(\w[\w-]*)=(?:"([^"]*)"|(\S+))/g, '')
-  while ((match = boolRegex.exec(cleaned)) !== null) {
-    attrs[match[1]!] = 'true'
-  }
-  return attrs
+export interface MarkdownParserOptions {
+  /**
+   * 额外注册的用户块（会与内置块合并；同名用户块若未 override 则会被忽略并警告）
+   */
+  blocks?: BlockDefinition[]
+  /**
+   * 是否包含内置块（默认 true）。设为 false 时仅使用 `blocks` 中的块
+   */
+  includeBuiltin?: boolean
+  /** 预创建的 registry，优先使用 */
+  registry?: BlockRegistry
+  /** 传递给 MarkdownIt 的选项 */
+  markdownItOptions?: ConstructorParameters<typeof MarkdownIt>[0]
 }
 
 /**
- * 将属性对象转为 data-* HTML 属性字符串
+ * 用单个 BlockDefinition 在 MarkdownIt 实例上注册 container
  */
-function attrsToDataString(attrs: Record<string, string>): string {
-  return Object.entries(attrs)
-    .map(([key, value]) => {
-      // camelCase → kebab-case for data attributes
-      const kebab = key.replace(/([A-Z])/g, '-$1').toLowerCase()
-      // HTML 属性值转义
-      const escaped = value
-        .replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-      return `data-${kebab}="${escaped}"`
-    })
-    .join(' ')
+function installBlock(md: MarkdownIt, def: BlockDefinition) {
+  const componentName = def.componentName || defaultComponentName(def.name)
+  const namePattern = new RegExp(`^\\s*${escapeRegex(def.name)}(\\s|$)`)
+
+  md.use(container, def.name, {
+    validate: (params: string) => namePattern.test(params.trim() + ' '),
+    render(tokens: unknown[], idx: number) {
+      const token = tokens[idx] as { nesting: number; info: string }
+      if (token.nesting !== 1) return '</vue-block>\n'
+      const info = token.info.trim()
+      const rest = info.replace(new RegExp(`^${escapeRegex(def.name)}\\s*`), '')
+      const parsed = applyParseInfo(def.parseInfo, rest)
+      const attrHtml = attrsToDataHtml(parsed)
+      const sep = attrHtml ? ' ' : ''
+      return `<vue-block data-component="${componentName}"${sep}${attrHtml}>\n`
+    },
+  })
+}
+
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 /**
- * 支持的容器块类型及其解析规则
+ * 创建 Markdown 解析器（可扩展版）
+ *
+ * @example
+ * ```ts
+ * const { parse, md, registry } = useMarkdownParser({
+ *   blocks: [
+ *     defineBlock({ name: 'job-card', component: JobCardBlock, parseInfo: 'json' }),
+ *   ],
+ * })
+ * const html = parse(':::job-card {"title":"..."}\n:::')
+ * ```
  */
-const BLOCK_CONFIGS = [
-  // --- 已有 ---
-  {
-    name: 'alert',
-    validate: (params: string) => /^alert/.test(params.trim()),
-    render: (tokens: any[], idx: number) => {
-      const token = tokens[idx]
-      if (token.nesting === 1) {
-        const type = token.info.trim().replace('alert', '').trim() || 'info'
-        return `<vue-block data-component="AlertBlock" data-type="${type}">\n`
-      }
-      return '</vue-block>\n'
-    },
-  },
-  {
-    name: 'card',
-    validate: (params: string) => /^card/.test(params.trim()),
-    render: (tokens: any[], idx: number) => {
-      const token = tokens[idx]
-      if (token.nesting === 1) {
-        const title = token.info.trim().replace('card', '').trim()
-        const safeTitle = title.replace(/"/g, '&quot;')
-        return `<vue-block data-component="DataCard" data-title="${safeTitle}">\n`
-      }
-      return '</vue-block>\n'
-    },
-  },
+export function useMarkdownParser(options: MarkdownParserOptions = {}) {
+  const md = new MarkdownIt({
+    html: true,
+    linkify: true,
+    typographer: true,
+    ...(options.markdownItOptions || {}),
+  })
 
-  // --- v2 新增 ---
-  {
-    name: 'confirm',
-    validate: (params: string) => /^\s*confirm/.test(params.trim()),
-    render: (tokens: any[], idx: number) => {
-      const token = tokens[idx]
-      if (token.nesting === 1) {
-        const info = token.info.trim()
-        const attrs = parseBlockAttributes(info.replace(/^confirm\s*/, ''))
-        return `<vue-block data-component="ConfirmBlock" ${attrsToDataString(attrs)}>\n`
-      }
-      return '</vue-block>\n'
-    },
-  },
-  {
-    name: 'select',
-    validate: (params: string) => /^\s*select/.test(params.trim()),
-    render: (tokens: any[], idx: number) => {
-      const token = tokens[idx]
-      if (token.nesting === 1) {
-        const info = token.info.trim()
-        const attrs = parseBlockAttributes(info.replace(/^select\s*/, ''))
-        return `<vue-block data-component="SelectBlock" ${attrsToDataString(attrs)}>\n`
-      }
-      return '</vue-block>\n'
-    },
-  },
-  {
-    name: 'form',
-    validate: (params: string) => /^\s*form/.test(params.trim()),
-    render: (tokens: any[], idx: number) => {
-      const token = tokens[idx]
-      if (token.nesting === 1) {
-        const info = token.info.trim()
-        const attrs = parseBlockAttributes(info.replace(/^form\s*/, ''))
-        return `<vue-block data-component="FormBlock" ${attrsToDataString(attrs)}>\n`
-      }
-      return '</vue-block>\n'
-    },
-  },
-  {
-    name: 'progress',
-    validate: (params: string) => /^\s*progress/.test(params.trim()),
-    render: (tokens: any[], idx: number) => {
-      const token = tokens[idx]
-      if (token.nesting === 1) {
-        const info = token.info.trim()
-        const attrs = parseBlockAttributes(info.replace(/^progress\s*/, ''))
-        return `<vue-block data-component="ProgressBlock" ${attrsToDataString(attrs)}>\n`
-      }
-      return '</vue-block>\n'
-    },
-  },
-  {
-    name: 'datatable',
-    validate: (params: string) => /^\s*datatable/.test(params.trim()),
-    render: (tokens: any[], idx: number) => {
-      const token = tokens[idx]
-      if (token.nesting === 1) {
-        const info = token.info.trim()
-        const attrs = parseBlockAttributes(info.replace(/^datatable\s*/, ''))
-        return `<vue-block data-component="DataTableBlock" ${attrsToDataString(attrs)}>\n`
-      }
-      return '</vue-block>\n'
-    },
-  },
-  {
-    name: 'actions',
-    validate: (params: string) => /^\s*actions/.test(params.trim()),
-    render: (tokens: any[], idx: number) => {
-      const token = tokens[idx]
-      if (token.nesting === 1) {
-        return `<vue-block data-component="ActionPills">\n`
-      }
-      return '</vue-block>\n'
-    },
-  },
-  {
-    name: 'artifact',
-    validate: (params: string) => /^\s*artifact/.test(params.trim()),
-    render: (tokens: any[], idx: number) => {
-      const token = tokens[idx]
-      if (token.nesting === 1) {
-        const info = token.info.trim()
-        const attrs = parseBlockAttributes(info.replace(/^artifact\s*/, ''))
-        return `<vue-block data-component="ArtifactBlock" ${attrsToDataString(attrs)}>\n`
-      }
-      return '</vue-block>\n'
-    },
-  },
-]
+  const registry = options.registry || createBlockRegistry()
 
-/**
- * 创建 Markdown 解析器（增强版）
- */
-export function useMarkdownParser() {
-  const md = new MarkdownIt({ html: true, linkify: true, typographer: true })
+  // 注册内置块
+  if (options.includeBuiltin !== false && !options.registry) {
+    for (const b of createBuiltinBlocks()) registry.register(b)
+  }
 
-  // 注册所有容器块
-  for (const config of BLOCK_CONFIGS) {
-    md.use(container, config.name, {
-      validate: config.validate,
-      render: config.render,
-    })
+  // 注册用户块
+  if (options.blocks) {
+    for (const b of options.blocks) registry.register(b)
+  }
+
+  // 将 registry 中的每个块装到 md
+  for (const def of registry.all()) {
+    installBlock(md, def)
   }
 
   function parse(content: string): string {
-    const safeContent = autoCloseContainers(content)
-    return md.render(safeContent)
+    const safe = autoCloseContainers(content)
+    return md.render(safe)
   }
 
-  return { parse, md }
+  return { parse, md, registry }
 }
 
 /**
- * 向后兼容 v1 的 renderMarkdown 函数
- * @deprecated 请使用 useMarkdownParser().parse() 代替
+ * 向后兼容：保留 `renderMarkdown(raw)` 快捷函数
+ * @deprecated 推荐使用 `useMarkdownParser().parse()`
  */
-const _parser = /* @__PURE__ */ (() => {
-  const { parse } = useMarkdownParser()
-  return parse
-})()
-
+let _defaultParser: ReturnType<typeof useMarkdownParser> | null = null
 export function renderMarkdown(raw: string): string {
-  return _parser(raw)
+  if (!_defaultParser) _defaultParser = useMarkdownParser()
+  return _defaultParser.parse(raw)
 }
