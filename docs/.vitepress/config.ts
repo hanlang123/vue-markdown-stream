@@ -24,7 +24,7 @@ export default defineConfig({
       { text: 'API', link: '/api/markdown-renderer' },
       { text: '演示', link: '/demo' },
       {
-        text: 'v2.0.0',
+        text: 'v2.1.0',
         items: [
           { text: 'Changelog', link: 'https://github.com/hanlang123/vue-markdown-stream/releases' },
           { text: 'npm', link: 'https://www.npmjs.com/package/@krishanjinbo/vue-markdown-stream' },
@@ -54,6 +54,8 @@ export default defineConfig({
           items: [
             { text: 'MarkdownRenderer', link: '/api/markdown-renderer' },
             { text: 'Composables', link: '/api/composables' },
+            { text: 'Block Registry', link: '/api/block-registry' },
+            { text: 'htmlToVnodes', link: '/api/html-to-vnodes' },
             { text: '工具函数', link: '/api/utils' },
             { text: '事件总线', link: '/api/event-bus' },
             { text: 'Props 校验', link: '/api/prop-validator' },

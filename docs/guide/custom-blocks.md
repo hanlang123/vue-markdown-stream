@@ -38,9 +38,69 @@ v2 内置 8 个块组件：
 :::
 ```
 
-## 通过 Props 注册自定义组件（v2 新增）
+## 通过 `defineBlock` 注册自定义块 <Badge type="tip" text="v3 推荐" />
 
-v2 支持通过 `components` prop 传入自定义组件，无需修改源码：
+v3 提供 `defineBlock` 统一 API —— **一行声明**即可打通 markdown-it 容器、componentMap、info-string 解析、Props 校验、LLM prompt 文档。
+
+```vue
+<script setup lang="ts">
+import { MarkdownRenderer, defineBlock } from '@krishanjinbo/vue-markdown-stream'
+import JobCardBlock from './components/JobCardBlock.vue'
+import SkillRadarBlock from './components/SkillRadarBlock.vue'
+
+const blocks = [
+  defineBlock({
+    name: 'job-card',
+    component: JobCardBlock,
+    parseInfo: 'json',              // :::job-card {"title":"..."}
+  }),
+  defineBlock({
+    name: 'skill-radar',
+    component: SkillRadarBlock,
+    parseInfo: 'json',
+    schema: { items: { type: 'array', maxLength: 20 } },
+    docs: {
+      description: '技能雷达图',
+      example: '::: skill-radar {"items":[{"name":"Vue","score":9}]}\n\n:::',
+    },
+  }),
+]
+</script>
+
+<template>
+  <MarkdownRenderer :content="text" :blocks="blocks" streaming />
+</template>
+```
+
+### `parseInfo` 四种策略
+
+| 策略 | `:::` 语法 | 组件 props |
+|------|-----------|-----------|
+| `'attrs'`（默认） | `:::confirm action=delete level=danger` | `{ action, level }` |
+| `'json'` | `:::job-card {"title":"前端"}` | 整个对象注入 `data-props` |
+| `'title'` | `:::card 技术栈对比` | `{ title: '技术栈对比' }` |
+| `(rest) => {...}` | 自定义函数 | 返回对象；`__props` 字段会进 JSON payload |
+
+### 工厂式：一次配置，全应用复用
+
+```typescript
+// app/markdown.ts
+import { createMarkdownStream, defineBlock } from '@krishanjinbo/vue-markdown-stream'
+import JobCard from './blocks/JobCard.vue'
+
+export const { MarkdownRenderer } = createMarkdownStream({
+  blocks: [defineBlock({ name: 'job-card', component: JobCard, parseInfo: 'json' })],
+})
+
+// 任意页面
+// <MarkdownRenderer :content="text" streaming />
+```
+
+详见 [Block Registry API](../api/block-registry) 与 [createMarkdownStream](../api/composables#createmarkdownstream)。
+
+## 通过 Props 注册自定义组件（v2 兼容写法）
+
+如果你还在用 v2 的 `components` prop，完全兼容：
 
 ```vue
 <script setup lang="ts">
@@ -71,7 +131,7 @@ const customSchemas = {
 ```
 
 ::: tip
-自定义组件会与内置组件**合并**，同名时用户组件优先。
+自定义组件会与内置组件**合并**，同名时用户组件优先。新项目建议使用 `defineBlock` —— 它在 v2 机制之上补齐了 info-string 解析、docs 元信息与 LLM prompt 生成。
 :::
 
 ## Props 传递规则
