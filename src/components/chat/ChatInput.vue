@@ -52,6 +52,7 @@ function onKeydown(e: KeyboardEvent) {
       ref="textarea"
       v-model="text"
       :placeholder="placeholder || '输入消息，回车发送，Shift+Enter 换行'"
+      :aria-label="placeholder || '聊天输入框'"
       :disabled="disabled"
       class="vms-chat-textarea"
       rows="1"

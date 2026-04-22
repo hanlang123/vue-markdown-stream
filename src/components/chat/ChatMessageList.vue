@@ -58,7 +58,7 @@ watch(
 
 <template>
   <div ref="listRef" class="vms-chat-list">
-    <div v-if="!messages.length" class="vms-chat-empty">
+    <div v-if="!messages.length" class="vms-chat-empty" role="status" aria-live="polite">
       <slot name="empty">
         <div class="vms-chat-empty-default">暂无消息</div>
       </slot>

@@ -1,6 +1,6 @@
-# 从 0 到聊天应用（10 行接入）
+# 从 0 到聊天应用（核心逻辑 10 行内）
 
-本指南演示如何用 `@krishanjinbo/vue-markdown-stream` v3 的开箱能力，**10 行内**搭建一个支持自定义块、流式传输、Agent 状态时间轴、中断/恢复的 AI 聊天界面。
+本指南演示如何用 `@krishanjinbo/vue-markdown-stream` v3 的开箱能力搭建一个支持自定义块、流式传输、Agent 状态时间轴、中断/恢复的 AI 聊天界面。核心业务代码（`defineBlock` + `useAgentStream.start` + `<ChatMessageList>`/`<ChatInput>` 组合）在 10 行以内；下面的完整示例含模板与样板代码。
 
 ## 安装
 
