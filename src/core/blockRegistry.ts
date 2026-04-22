@@ -81,14 +81,17 @@ export function defaultComponentName(blockName: string): string {
  */
 export function parseAttrString(attrStr: string): Record<string, string> {
   const attrs: Record<string, string> = {}
-  const kvRegex = /(\w[\w-]*)=(?:"([^"]*)"|(\S+))/g
+  // 防御：LLM 输入可能过长，限制长度避免病态回溯
+  const input = attrStr.length > 10_000 ? attrStr.slice(0, 10_000) : attrStr
+  // 使用非重叠字符类，避免 \w 与 [\w-] 交集导致回溯（ReDoS 防御）
+  const kvRegex = /([A-Za-z_][\w-]*)=(?:"([^"]*)"|(\S+))/g
   let match: RegExpExecArray | null
-  while ((match = kvRegex.exec(attrStr)) !== null) {
+  while ((match = kvRegex.exec(input)) !== null) {
     attrs[match[1]!] = match[2] ?? match[3] ?? ''
   }
   // 布尔 flag
-  const boolRegex = /(?:^|\s)(\w[\w-]*)(?=\s|$)/g
-  const cleaned = attrStr.replace(kvRegex, '')
+  const boolRegex = /(?:^|\s)([A-Za-z_][\w-]*)(?=\s|$)/g
+  const cleaned = input.replace(kvRegex, '')
   while ((match = boolRegex.exec(cleaned)) !== null) {
     attrs[match[1]!] = 'true'
   }

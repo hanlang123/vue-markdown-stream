@@ -88,9 +88,29 @@ function nodeToVNode(
     .filter((x) => x !== null) as (VNode | string)[]
   const attrs: Record<string, string> = {}
   for (const attr of Array.from(el.attributes)) {
+    if (!isSafePlainAttr(attr.name, attr.value)) continue
     attrs[attr.name] = attr.value
   }
   return h(tag, attrs, children as VNode[])
+}
+
+/**
+ * 非 vue-block 的普通 HTML 元素的属性白名单过滤
+ *
+ * markdown-it 默认会 HTML 转义；即便用户配置了 `html: true`，
+ * 这里依然过滤 on* 内联事件与 javascript: 协议，作为渲染层的防御兜底。
+ */
+function isSafePlainAttr(name: string, value: string): boolean {
+  const lower = name.toLowerCase()
+  if (lower.startsWith('on')) return false
+  if (lower === 'style') return true // Vue 渲染时 style 是字符串，仍由 Vue 处理
+  if (lower === 'href' || lower === 'src' || lower === 'xlink:href' || lower === 'formaction') {
+    const trimmed = value.trim().toLowerCase()
+    if (trimmed.startsWith('javascript:') || trimmed.startsWith('data:text/html')) {
+      return false
+    }
+  }
+  return true
 }
 
 function vueBlockToVNode(
