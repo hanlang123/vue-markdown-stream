@@ -1,14 +1,30 @@
 import {
-  defineComponent, h, watch, shallowRef, provide, onBeforeUnmount,
-  type PropType, type VNode
+  defineComponent,
+  h,
+  watch,
+  shallowRef,
+  provide,
+  onBeforeUnmount,
+  computed,
+  type PropType,
+  type VNode,
 } from 'vue'
-import { useMarkdownParser } from '../composables/useMarkdownParser'
-import { createAgentEventBus, type AgentEventBus, type AgentActionPayload } from '../core/eventBus'
-import { validateProps, sanitizePayload, type ComponentPropsSchema, defaultSchemas } from '../core/propValidator'
+import { useMarkdownParser, type MarkdownParserOptions } from '../composables/useMarkdownParser'
+import {
+  createAgentEventBus,
+  type AgentEventBus,
+  type AgentActionPayload,
+} from '../core/eventBus'
+import {
+  type ComponentPropsSchema,
+  defaultSchemas,
+} from '../core/propValidator'
 import { builtinComponentMap } from './blocks'
+import { htmlToVnodes } from '../core/htmlToVnodes'
+import type { BlockDefinition } from '../core/blockRegistry'
 import type { ComponentMap } from '../types'
 
-// Provide/Inject key
+/** Provide/Inject key —— 供深层子组件取 eventBus */
 export const AGENT_EVENT_BUS_KEY = Symbol('agentEventBus')
 
 export default defineComponent({
@@ -20,167 +36,143 @@ export default defineComponent({
       type: String,
       required: true,
     },
-    /**
-     * 自定义组件注册表（与内置组件合并，用户组件优先）
-     */
+    /** 自定义组件注册表（与内置组件合并，用户组件优先） */
     components: {
       type: Object as PropType<ComponentMap>,
       default: () => ({}),
     },
-    /**
-     * [v2 新增] 自定义 Props Schema（与默认 Schema 合并）
-     */
+    /** 自定义 Props Schema（与默认 Schema 合并） */
     propsSchemas: {
       type: Object as PropType<Record<string, ComponentPropsSchema>>,
       default: () => ({}),
     },
-    /**
-     * [v2 新增] 是否启用 Props 安全校验（默认启用）
-     */
+    /** 是否启用 Props 安全校验（默认启用） */
     enableValidation: {
       type: Boolean,
       default: true,
+    },
+    /**
+     * [v3] 额外注册的块（defineBlock 返回值）
+     * 会一并装入内部 parser 与 componentMap
+     */
+    blocks: {
+      type: Array as PropType<BlockDefinition[]>,
+      default: () => [],
+    },
+    /**
+     * [v3] 是否正在流式输出
+     * true 时会：① 在内容末尾追加 `cursor` 字符；② 使用 rAF 节流解析，避免每个 chunk 重解析
+     */
+    streaming: {
+      type: Boolean,
+      default: false,
+    },
+    /** [v3] 流式光标字符（默认 `▍`），可传空字符串禁用 */
+    cursor: {
+      type: String,
+      default: '▍',
     },
   },
 
   emits: {
     /**
-     * [v2 新增] Agent 操作事件
-     *
-     * 当任何内置或自定义块组件触发用户交互时，
-     * 通过此事件通知宿主应用，宿主应用负责将其转发给 Agent
+     * Agent 操作事件
+     * 所有内置/自定义块组件的用户交互都会通过此事件透传给宿主
      */
     'agent:action': (_payload: AgentActionPayload) => true,
   },
 
   setup(props, { emit }) {
-    // 合并组件注册表
+    // --- Parser ---
+    const parserOpts: MarkdownParserOptions = {
+      blocks: props.blocks,
+    }
+    const { parse, registry } = useMarkdownParser(parserOpts)
+
+    // --- Component map：内置 + registry 中的块组件 + 用户 props.components（最高优先级）---
+    const registryComponentMap: ComponentMap = {}
+    for (const def of registry.all()) {
+      const name = def.componentName || def.name
+      registryComponentMap[name] = def.component
+    }
     const mergedComponentMap: ComponentMap = {
       ...builtinComponentMap,
+      ...registryComponentMap,
       ...props.components,
     }
 
-    // 合并 Props Schema
+    // --- Schema map：默认 + registry 中的 schemas + 用户 propsSchemas（最高优先级）---
+    const registrySchemas: Record<string, ComponentPropsSchema> = {}
+    for (const def of registry.all()) {
+      if (def.schema) {
+        const name = def.componentName || def.name
+        registrySchemas[name] = def.schema
+      }
+    }
     const mergedSchemas: Record<string, ComponentPropsSchema> = {
       ...defaultSchemas,
+      ...registrySchemas,
       ...props.propsSchemas,
     }
 
-    // 创建事件总线
+    // --- Event Bus ---
     const eventBus: AgentEventBus = createAgentEventBus()
-
-    // 事件总线 → emit 到宿主
-    eventBus.on((payload) => {
-      emit('agent:action', payload)
-    })
-
-    // 通过 provide 注入给所有子组件
+    eventBus.on((payload) => emit('agent:action', payload))
     provide(AGENT_EVENT_BUS_KEY, eventBus)
 
-    // Markdown 解析器
-    const { parse } = useMarkdownParser()
+    // --- Props cache（跨次解析共享，保证引用稳定）---
+    const propsCache = new Map<string, Record<string, unknown>>()
+
+    // --- 渲染状态 ---
     const vnodes = shallowRef<VNode[]>([])
 
-    // 自增的块 ID（用于没有指定 data-id 的组件）
-    let blockIdCounter = 0
-
-    /**
-     * 核心：将 DOM 节点递归转换为 VNode
-     * 增强点：vue-block 节点注入 eventBus + Props 校验 + 事件绑定
-     */
-    function domNodeToVNode(node: Node): VNode | string | null {
-      // 文本节点
-      if (node.nodeType === Node.TEXT_NODE) {
-        return node.textContent || null
+    // 实际用来解析的内容（附加流式光标）
+    const displayContent = computed(() => {
+      if (props.streaming && props.cursor) {
+        return props.content + props.cursor
       }
+      return props.content
+    })
 
-      // 非元素节点忽略
-      if (node.nodeType !== Node.ELEMENT_NODE) return null
-      const el = node as HTMLElement
-      const tagName = el.tagName.toLowerCase()
-
-      // ========== vue-block 组件节点 ==========
-      if (tagName === 'vue-block') {
-        const componentName = el.getAttribute('data-component') || ''
-        const Component = mergedComponentMap[componentName]
-
-        if (!Component) {
-          // 未注册的组件 → 优雅降级为普通 HTML 渲染
-          console.warn(`[MarkdownRenderer] Unknown component: ${componentName}, fallback to HTML`)
-          const children = Array.from(el.childNodes).map(domNodeToVNode).filter(Boolean)
-          return h('div', { class: 'markdown-block-fallback' }, children as VNode[])
-        }
-
-        // 提取 data-* 属性为 props
-        const rawProps: Record<string, string> = {}
-        for (const attr of Array.from(el.attributes)) {
-          if (attr.name.startsWith('data-') && attr.name !== 'data-component') {
-            const propName = attr.name
-              .replace('data-', '')
-              .replace(/-([a-z])/g, (_, c) => c.toUpperCase())  // kebab → camelCase
-            rawProps[propName] = attr.value
-          }
-        }
-
-        // Props 校验 + 清洗
-        const validatedProps = props.enableValidation
-          ? validateProps(componentName, rawProps, mergedSchemas)
-          : rawProps
-
-        // 生成块 ID
-        const blockId = rawProps.id || `block-${++blockIdCounter}`
-
-        // 子内容作为 default slot
-        const children = Array.from(el.childNodes).map(domNodeToVNode).filter(Boolean)
-
-        // 构建 VNode，注入 eventBus 引用和 blockId
-        return h(Component, {
-          ...validatedProps,
-          blockId,
-          eventBus,
-          // 监听组件的 agent-action 事件（组件内部 emit）
-          'onAgent-action': (event: string, data: Record<string, unknown>) => {
-            eventBus.emit({
-              blockId,
-              event,
-              componentType: componentName,
-              data: sanitizePayload(data) as Record<string, unknown>,
-            })
-          },
-        }, {
-          default: () => children,
-        })
+    // rAF 节流解析
+    let rafId: number | null = null
+    function scheduleParse(content: string) {
+      if (typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
+        doParse(content)
+        return
       }
-
-      // ========== 普通 HTML 元素 ==========
-      const children = Array.from(el.childNodes).map(domNodeToVNode).filter(Boolean)
-      const attrs: Record<string, string> = {}
-      for (const attr of Array.from(el.attributes)) {
-        attrs[attr.name] = attr.value
-      }
-      return h(tagName, attrs, children as VNode[])
+      if (rafId !== null) cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(() => {
+        rafId = null
+        doParse(content)
+      })
     }
 
-    // 监听 content 变化 → 重新解析
-    watch(
-      () => props.content,
-      (newContent) => {
-        blockIdCounter = 0  // 每次内容更新重置计数器
-        const html = parse(newContent)
-        const parser = new DOMParser()
-        const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html')
-        const root = doc.body.firstChild!
+    function doParse(content: string) {
+      const html = parse(content)
+      vnodes.value = htmlToVnodes(html, {
+        componentMap: mergedComponentMap,
+        schemas: mergedSchemas,
+        eventBus,
+        enableValidation: props.enableValidation,
+        stableKey: true,
+        propsCache,
+      })
+    }
 
-        vnodes.value = Array.from(root.childNodes)
-          .map(domNodeToVNode)
-          .filter(Boolean) as VNode[]
+    watch(
+      displayContent,
+      (newContent) => {
+        if (props.streaming) scheduleParse(newContent)
+        else doParse(newContent)
       },
-      { immediate: true }
+      { immediate: true },
     )
 
-    // 清理
     onBeforeUnmount(() => {
+      if (rafId !== null) cancelAnimationFrame(rafId)
       eventBus.destroy()
+      propsCache.clear()
     })
 
     return () => h('div', { class: 'markdown-body' }, vnodes.value)

@@ -33,6 +33,11 @@
       "import": "./dist/vue-markdown-stream.es.js",
       "require": "./dist/vue-markdown-stream.cjs.js"
     },
+    "./chat": {
+      "types": "./dist/chat.d.ts",
+      "import": "./dist/chat.es.js",
+      "require": "./dist/chat.cjs.js"
+    },
     "./style.css": "./dist/style.css"
   },
   "files": [
