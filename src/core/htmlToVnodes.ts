@@ -104,9 +104,25 @@ function isSafePlainAttr(name: string, value: string): boolean {
   const lower = name.toLowerCase()
   if (lower.startsWith('on')) return false
   if (lower === 'style') return true // Vue 渲染时 style 是字符串，仍由 Vue 处理
-  if (lower === 'href' || lower === 'src' || lower === 'xlink:href' || lower === 'formaction') {
-    const trimmed = value.trim().toLowerCase()
-    if (trimmed.startsWith('javascript:') || trimmed.startsWith('data:text/html')) {
+  if (
+    lower === 'href' ||
+    lower === 'src' ||
+    lower === 'xlink:href' ||
+    lower === 'formaction' ||
+    lower === 'action' ||
+    lower === 'srcdoc' ||
+    lower === 'background' ||
+    lower === 'poster'
+  ) {
+    // 归一化 value：去除控制字符与前导空白，再判断 scheme
+    // 防御点：data:、javascript:、vbscript:、file: 协议一律拒绝
+    const normalized = value.replace(/[\u0000-\u001F\s]+/g, '').toLowerCase()
+    if (
+      normalized.startsWith('javascript:') ||
+      normalized.startsWith('vbscript:') ||
+      normalized.startsWith('data:') ||
+      normalized.startsWith('file:')
+    ) {
       return false
     }
   }
