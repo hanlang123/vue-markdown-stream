@@ -1,6 +1,6 @@
 {
   "name": "@krishanjinbo/vue-markdown-stream",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": false,
   "description": "Stream markdown content with Vue 3 component blocks — powered by markdown-it-container",
   "keywords": [
@@ -38,7 +38,7 @@
       "import": "./dist/chat.es.js",
       "require": "./dist/chat.cjs.js"
     },
-    "./style.css": "./dist/style.css"
+    "./style.css": "./dist/vue-markdown-stream.css"
   },
   "files": [
     "dist",
